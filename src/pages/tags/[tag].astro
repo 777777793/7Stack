@@ -6,12 +6,14 @@ import {
   getAllTags,
   getEntryUrl,
   isPublished,
-  sortEntriesByDate
+  sortEntriesByDate,
+  withBase
 } from '../../lib/content';
 
 export async function getStaticPaths() {
   const posts = await getCollection('posts', isPublished);
-  return getAllTags(posts).map((tag) => ({
+  const notes = await getCollection('notes', isPublished);
+  return getAllTags([...posts, ...notes]).map((tag) => ({
     params: { tag },
     props: { tag }
   }));
@@ -19,12 +21,13 @@ export async function getStaticPaths() {
 
 const { tag } = Astro.props;
 const posts = await getCollection('posts', (post) => isPublished(post) && post.data.tags.includes(tag));
-const entries = sortEntriesByDate(posts);
+const notes = await getCollection('notes', (note) => isPublished(note) && note.data.tags.includes(tag));
+const entries = sortEntriesByDate([...posts, ...notes]);
 ---
 
 <BaseLayout title={`标签：${tag}`} description={`所有带有 ${tag} 标签的文章。`}>
   <div class="mb-lg">
-    <a href="/tags/" class="inline-flex items-center gap-2 text-label-md font-medium text-secondary hover:text-on-secondary-fixed-variant transition-colors group">
+    <a href={withBase('/tags/')} class="inline-flex items-center gap-2 text-label-md font-medium text-secondary hover:text-on-secondary-fixed-variant transition-colors group">
       <svg class="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
       </svg>

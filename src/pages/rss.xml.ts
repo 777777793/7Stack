@@ -5,17 +5,19 @@ import {
   getEntryUrl,
   isPublished,
   sortEntriesByDate,
-  titleFromId
+  titleFromId,
+  withBase
 } from '../lib/content';
 
 export async function GET(context) {
   const posts = await getCollection('posts', isPublished);
-  const entries = sortEntriesByDate(posts);
+  const notes = await getCollection('notes', isPublished);
+  const entries = sortEntriesByDate([...posts, ...notes]);
 
   return rss({
     title: SITE.title,
     description: SITE.description,
-    site: context.site,
+    site: new URL(withBase('/'), context.site),
     items: entries.map((entry) => ({
       title: entry.data.title ?? titleFromId(entry.id),
       description: entry.data.description ?? '',

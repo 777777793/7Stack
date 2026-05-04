@@ -1,15 +1,16 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getAllTags, isPublished, tagUrl } from '../../lib/content';
+import { getAllTags, isPublished, tagUrl, withBase } from '../../lib/content';
 
 const posts = await getCollection('posts', isPublished);
-const tags = getAllTags(posts);
+const notes = await getCollection('notes', isPublished);
+const tags = getAllTags([...posts, ...notes]);
 ---
 
 <BaseLayout title="标签" description="按技术主题浏览文章。">
   <div class="mb-lg">
-    <a href="/" class="inline-flex items-center gap-2 text-label-md font-medium text-secondary hover:text-on-secondary-fixed-variant transition-colors group">
+    <a href={withBase('/')} class="inline-flex items-center gap-2 text-label-md font-medium text-secondary hover:text-on-secondary-fixed-variant transition-colors group">
       <svg class="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
       </svg>

@@ -180,6 +180,10 @@ body {
   border-radius: 0 var(--rounded-DEFAULT) var(--rounded-DEFAULT) 0;
 }
 
+.post-content blockquote p {
+  white-space: pre-line;
+}
+
 .post-content ul,
 .post-content ol {
   padding-left: 1.5rem;

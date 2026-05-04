@@ -1,0 +1,30 @@
+---
+import { getCollection } from 'astro:content';
+import ArticleCard from '../../components/ArticleCard.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getEntryUrl, isPublished, sortEntriesByDate, withBase } from '../../lib/content';
+
+const posts = await getCollection('posts', isPublished);
+const entries = sortEntriesByDate(posts);
+---
+
+<BaseLayout title="随笔" description="项目复盘和阅读笔记。">
+  <div class="mb-xl">
+    <a href={withBase('/')} class="inline-flex items-center gap-2 text-label-md font-medium text-secondary hover:text-on-secondary-fixed-variant transition-colors group">
+      <svg class="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+      </svg>
+      返回首页
+    </a>
+  </div>
+
+  <header class="mb-xl text-center max-w-3xl mx-auto pt-lg">
+    <p class="text-label-sm font-medium text-secondary uppercase tracking-widest mb-2">Essays</p>
+    <h1 class="text-headline-xxl font-semibold text-primary tracking-tight">随笔</h1>
+    <p class="text-body-lg text-on-surface-variant max-w-2xl mx-auto mt-2 leading-relaxed">项目复盘与阅读笔记。面试题在复习室，技术笔记在知识库。</p>
+  </header>
+
+  <section class="grid grid-cols-1 lg:grid-cols-2 gap-gutter max-w-5xl mx-auto">
+    {entries.map((entry) => <ArticleCard post={entry} href={getEntryUrl(entry)} />)}
+  </section>
+</BaseLayout>

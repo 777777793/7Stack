@@ -2,7 +2,7 @@
 import BaseLayout from './BaseLayout.astro';
 import Toc from '../components/Toc.astro';
 import TagList from '../components/TagList.astro';
-import { formatDate, getReadingMinutes, titleFromId, type EntryLike } from '../lib/content';
+import { formatDate, getReadingMinutes, titleFromId, withBase, type EntryLike } from '../lib/content';
 
 interface Heading {
   depth: number;
@@ -35,7 +35,7 @@ const category = eyebrow ?? post.data.category;
         {
           backHref && (
             <a
-              href={backHref}
+              href={withBase(backHref)}
               class="inline-flex items-center gap-2 text-label-md font-medium text-secondary hover:text-on-secondary-fixed-variant transition-colors mb-lg group"
             >
               <svg class="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">

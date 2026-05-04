@@ -33,11 +33,30 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Configure deployment paths
+        shell: bash
+        env:
+          SITE_URL_OVERRIDE: ${{ vars.SITE_URL }}
+          BASE_PATH_OVERRIDE: ${{ vars.BASE_PATH }}
+          REPOSITORY_OWNER: ${{ github.repository_owner }}
+          REPOSITORY_NAME: ${{ github.event.repository.name }}
+        run: |
+          if [ -n "$SITE_URL_OVERRIDE" ]; then
+            echo "SITE_URL=$SITE_URL_OVERRIDE" >> "$GITHUB_ENV"
+          else
+            echo "SITE_URL=https://$REPOSITORY_OWNER.github.io" >> "$GITHUB_ENV"
+          fi
+
+          if [ -n "$BASE_PATH_OVERRIDE" ]; then
+            echo "BASE_PATH=$BASE_PATH_OVERRIDE" >> "$GITHUB_ENV"
+          elif [ "$REPOSITORY_NAME" = "$REPOSITORY_OWNER.github.io" ]; then
+            echo "BASE_PATH=/" >> "$GITHUB_ENV"
+          else
+            echo "BASE_PATH=/$REPOSITORY_NAME/" >> "$GITHUB_ENV"
+          fi
+
       - name: Build
         run: npm run build
-        env:
-          SITE_URL: ${{ vars.SITE_URL || 'https://example.com' }}
-          BASE_PATH: ${{ vars.BASE_PATH || '/' }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4

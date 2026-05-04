@@ -20,6 +20,25 @@ export type EntryLike = {
   };
 };
 
+const BASE_URL = import.meta.env.BASE_URL ?? '/';
+
+export function withBase(path: string) {
+  if (
+    !path ||
+    path.startsWith('#') ||
+    path.startsWith('//') ||
+    /^[a-z][a-z\d+\-.]*:/i.test(path)
+  ) {
+    return path;
+  }
+
+  const base = BASE_URL.endsWith('/') ? BASE_URL : `${BASE_URL}/`;
+  if (path.startsWith(base)) return path;
+
+  const normalizedPath = path.startsWith('/') ? path.slice(1) : path;
+  return normalizedPath ? `${base}${normalizedPath}` : base;
+}
+
 export function isPublished(entry: EntryLike) {
   return !entry.data.draft;
 }
@@ -48,27 +67,27 @@ export function sortInterviewTopics(topics: InterviewTopic[]) {
 }
 
 export function getPostUrl(post: Post) {
-  return `/blog/${post.id}/`;
+  return withBase(`/writing/${post.id}/`);
 }
 
 export function getTopicUrl(topic: InterviewTopic) {
-  return `/interview/${encodeURIComponent(topic.id)}/`;
+  return withBase(`/interview/${encodeURIComponent(topic.id)}/`);
 }
 
 export function getTopicFullUrl(topic: InterviewTopic) {
-  return `/interview/${encodeURIComponent(topic.id)}/full/`;
+  return withBase(`/interview/${encodeURIComponent(topic.id)}/full/`);
 }
 
 export function getNoteUrl(note: Note) {
   const parts = note.id.split('/');
   const slug = parts.pop()!;
   const group = parts.join('/') || slug;
-  return `/notes/${encodeURIComponent(group)}/${encodeURIComponent(slug)}/`;
+  return withBase(`/notes/${encodeURIComponent(group)}/${encodeURIComponent(slug)}/`);
 }
 
 export function getEntryUrl(entry: EntryLike & { collection?: string }) {
   if (entry.collection === 'interview') {
-    return `/interview/${encodeURIComponent(entry.id)}/full/`;
+    return withBase(`/interview/${encodeURIComponent(entry.id)}/full/`);
   }
 
   if (entry.collection === 'notes') {
@@ -102,7 +121,7 @@ export function getAllTags(entries: EntryLike[]) {
 }
 
 export function tagUrl(tag: string) {
-  return `/tags/${encodeURIComponent(tag)}/`;
+  return withBase(`/tags/${encodeURIComponent(tag)}/`);
 }
 
 export function groupPostsByYear(posts: Post[]) {
@@ -213,7 +232,7 @@ export function getNoteTitle(note: Note) {
 }
 
 export function getNoteDescription(note: Note) {
-  return note.data.description ?? `${getNoteTitle(note)} 的学习笔记。`;
+  return note.data.description ?? `${getNoteTitle(note)} 的技术文档。`;
 }
 
 export function groupNotesByFolder(notes: Note[]) {

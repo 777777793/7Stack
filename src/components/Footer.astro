@@ -1,5 +1,6 @@
 ---
 import { SITE } from '../consts';
+import { withBase } from '../lib/content';
 
 const year = new Date().getFullYear();
 ---
@@ -10,9 +11,8 @@ const year = new Date().getFullYear();
       &copy; {year} {SITE.author}. All rights reserved.
     </div>
     <div class="flex gap-4 font-sans text-label-sm">
-      <a href="/rss.xml" class="text-on-surface-variant hover:text-primary transition-colors">RSS</a>
-      <a href="/archive/" class="text-on-surface-variant hover:text-primary transition-colors">归档</a>
-      <a href="/tags/" class="text-on-surface-variant hover:text-primary transition-colors">标签</a>
+      <a href={withBase('/rss.xml')} class="text-on-surface-variant hover:text-primary transition-colors">RSS</a>
+      <a href={withBase('/tags/')} class="text-on-surface-variant hover:text-primary transition-colors">标签</a>
     </div>
   </div>
 </footer>

@@ -8,7 +8,8 @@ import {
   formatFolderName,
   getNoteUrl,
   isPublished,
-  titleFromId
+  titleFromId,
+  withBase
 } from '../../lib/content';
 
 export async function getStaticPaths() {
@@ -78,13 +79,13 @@ function getNoteDate(note: (typeof allNotes)[number]) {
 }
 ---
 
-<BaseLayout title={`${groupName} 学习笔记`} description={`${groupName} 文件夹下的所有学习笔记。`}>
+<BaseLayout title={`${groupName} · 知识库`} description={`${groupName} 文件夹下的所有文档。`}>
   <div class="mb-lg">
-    <a href="/notes/" class="inline-flex items-center gap-2 text-label-md font-medium text-secondary hover:text-on-secondary-fixed-variant transition-colors group">
+    <a href={withBase('/notes/')} class="inline-flex items-center gap-2 text-label-md font-medium text-secondary hover:text-on-secondary-fixed-variant transition-colors group">
       <svg class="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
       </svg>
-      返回学习笔记
+      返回知识库
     </a>
   </div>
 
@@ -108,7 +109,7 @@ function getNoteDate(note: (typeof allNotes)[number]) {
               const latestDate = getFolderLatestModified(folderPath);
               return (
                 <a
-                  href={`/notes/${encodeURIComponent(group)}/${encodeURIComponent(subGroup)}/`}
+                  href={withBase(`/notes/${encodeURIComponent(group)}/${encodeURIComponent(subGroup)}/`)}
                   class="group block p-lg bg-surface-container-lowest rounded-xl border border-surface-variant hover:border-outline-variant transition-all hover:shadow-[0_8px_32px_rgba(0,0,0,0.05)] shadow-[0_4px_24px_rgba(0,0,0,0.03)]"
                 >
                   <div class="flex items-start justify-between mb-6">

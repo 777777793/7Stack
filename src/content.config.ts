@@ -35,7 +35,7 @@ const posts = defineCollection({
     description: z.string(),
     pubDate: z.coerce.date(),
     updatedDate: z.coerce.date().optional(),
-    category: z.enum(['面试题', '学习笔记', '项目复盘', '阅读笔记']),
+    category: z.enum(['项目复盘', '阅读笔记']),
     tags: z.array(z.string()).default([]),
     series: z.string().optional(),
     difficulty: z.enum(['入门', '进阶', '高频', '硬核']).optional(),

@@ -46,6 +46,13 @@ draft: false
 
 仓库推送到 GitHub 后，在仓库设置里启用 GitHub Pages，并选择 GitHub Actions 作为发布来源。
 
+默认情况下，部署工作流会自动按仓库信息生成：
+
+```text
+SITE_URL=https://username.github.io
+BASE_PATH=/repo-name/
+```
+
 如果使用自己的域名，建议在仓库 Variables 里添加：
 
 ```text

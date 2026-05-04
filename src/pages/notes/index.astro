@@ -9,7 +9,8 @@ import {
   getNoteUrl,
   groupNotesByFolder,
   isPublished,
-  titleFromId
+  titleFromId,
+  withBase
 } from '../../lib/content';
 
 const notes = await getCollection('notes', isPublished);
@@ -50,9 +51,9 @@ function getNoteDate(note: (typeof notes)[number]) {
 }
 ---
 
-<BaseLayout title="学习笔记" description="课程、文档、源码阅读和工具实践笔记。">
+<BaseLayout title="知识库" description="系统化的技术文档、源码阅读和工具实践笔记。">
   <div class="mb-lg">
-    <a href="/" class="inline-flex items-center gap-2 text-label-md font-medium text-secondary hover:text-on-secondary-fixed-variant transition-colors group">
+    <a href={withBase('/')} class="inline-flex items-center gap-2 text-label-md font-medium text-secondary hover:text-on-secondary-fixed-variant transition-colors group">
       <svg class="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
       </svg>
@@ -61,10 +62,10 @@ function getNoteDate(note: (typeof notes)[number]) {
   </div>
 
   <header class="mb-xl text-center max-w-3xl mx-auto pt-lg">
-    <p class="text-label-sm font-medium text-secondary uppercase tracking-widest mb-2">Study Notes</p>
-    <h1 class="text-headline-xxl font-semibold text-primary tracking-tight">学习笔记</h1>
+    <p class="text-label-sm font-medium text-secondary uppercase tracking-widest mb-2">Knowledge Base</p>
+    <h1 class="text-headline-xxl font-semibold text-primary tracking-tight">知识库</h1>
     <p class="text-body-lg text-on-surface-variant max-w-2xl mx-auto mt-2 leading-relaxed">
-      课程、文档、源码阅读和工具实践笔记，按技术领域分类组织。
+      系统化的技术文档、源码阅读和工具实践笔记，按技术领域分类组织。
     </p>
   </header>
 
@@ -79,7 +80,7 @@ function getNoteDate(note: (typeof notes)[number]) {
           const latestDate = getGroupLatestModified(group);
           return (
             <a
-              href={`/notes/${encodeURIComponent(group)}/`}
+              href={withBase(`/notes/${encodeURIComponent(group)}/`)}
               class="group block p-lg bg-surface-container-lowest rounded-xl border border-surface-variant hover:border-outline-variant transition-all hover:shadow-[0_8px_32px_rgba(0,0,0,0.05)] shadow-[0_4px_24px_rgba(0,0,0,0.03)]"
             >
               <div class="flex items-start justify-between mb-6">

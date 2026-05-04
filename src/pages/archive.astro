@@ -6,11 +6,13 @@ import {
   getEntryUrl,
   isPublished,
   sortEntriesByDate,
-  titleFromId
+  titleFromId,
+  withBase
 } from '../lib/content';
 
 const posts = await getCollection('posts', isPublished);
-const entries = sortEntriesByDate(posts).filter((entry) => entry.data.pubDate);
+const notes = await getCollection('notes', isPublished);
+const entries = sortEntriesByDate([...posts, ...notes]).filter((entry) => entry.data.pubDate);
 const groups = entries.reduce<Record<string, typeof entries>>((acc, entry) => {
   const year = String(entry.data.pubDate!.getFullYear());
   acc[year] = acc[year] ?? [];
@@ -19,9 +21,9 @@ const groups = entries.reduce<Record<string, typeof entries>>((acc, entry) => {
 }, {});
 ---
 
-<BaseLayout title="归档" description="按年份归档的全部文章。">
+<BaseLayout title="归档" description="按年份归档的全部内容。">
   <div class="mb-lg">
-    <a href="/" class="inline-flex items-center gap-2 text-label-md font-medium text-secondary hover:text-on-secondary-fixed-variant transition-colors group">
+    <a href={withBase('/')} class="inline-flex items-center gap-2 text-label-md font-medium text-secondary hover:text-on-secondary-fixed-variant transition-colors group">
       <svg class="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
       </svg>

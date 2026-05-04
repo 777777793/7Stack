@@ -9,7 +9,7 @@ const base = import.meta.env.BASE_URL;
   <input
     type="search"
     id="site-search"
-    placeholder="搜索文章、笔记..."
+    placeholder="搜索随笔、知识库..."
     autocomplete="off"
     data-search-input
     class="w-full bg-surface-container-lowest border border-outline-variant rounded-full py-3 pl-[3rem] pr-4 text-body-md text-on-surface focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition-all shadow-[0_2px_8px_rgba(0,0,0,0.04)] placeholder:text-outline"
@@ -37,6 +37,14 @@ const base = import.meta.env.BASE_URL;
     results.classList.add('hidden');
   }
 
+  function withBasePath(url) {
+    if (!url || url.startsWith(base) || url.startsWith('#') || url.startsWith('//') || /^[a-z][a-z\d+\-.]*:/i.test(url)) {
+      return url;
+    }
+
+    return `${base}${url.replace(/^\//, '')}`;
+  }
+
   input?.addEventListener('input', async (event) => {
     const query = (event.target as HTMLInputElement).value.trim();
     if (query.length < 2) {
@@ -61,7 +69,7 @@ const base = import.meta.env.BASE_URL;
       results.innerHTML = items
         .map(
           (item: any) => `
-            <a class="block p-3 bg-surface-container-lowest border border-surface-variant rounded-lg mb-2 hover:border-secondary transition-colors" href="${item.url}">
+            <a class="block p-3 bg-surface-container-lowest border border-surface-variant rounded-lg mb-2 hover:border-secondary transition-colors" href="${withBasePath(item.url)}">
               <strong class="text-label-md text-primary block">${item.meta.title}</strong>
               <span class="text-label-sm text-on-surface-variant">${item.excerpt}</span>
             </a>

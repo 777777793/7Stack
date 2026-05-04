@@ -16,13 +16,16 @@ import {
   groupNotesByFolder,
   isPublished,
   sortInterviewTopics,
-  sortPosts
+  sortPosts,
+  withBase
 } from '../lib/content';
+import { getInterviewTopicIcon } from '../lib/interview-icons';
 
 const posts = sortPosts(await getCollection('posts', isPublished));
 const notes = await getCollection('notes', isPublished);
 const interviewTopics = sortInterviewTopics(await getCollection('interview', isPublished));
-const noteGroups = groupNotesByFolder(notes);
+const folderNotes = notes.filter((note) => note.id.includes('/'));
+const noteGroups = groupNotesByFolder(folderNotes);
 const latestPosts = posts.slice(0, 3);
 const noteGroupEntries = Object.entries(noteGroups).slice(0, 8);
 const projectCount = posts.filter((post) => post.data.category === '项目复盘').length;
@@ -59,26 +62,6 @@ const totalQuestions = topicCards.reduce(
   0
 );
 
-const topicIcons: Record<string, string> = {
-  'Java': '<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5"/></svg>',
-  'JVM': '<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 002.25-2.25V6.75a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 6.75v10.5a2.25 2.25 0 002.25 2.25z"/></svg>',
-  'MySQL': '<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125v-3.75"/></svg>',
-  'Redis': '<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>',
-  'Spring': '<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18"/></svg>',
-  '分布式': '<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244"/></svg>',
-  '消息队列': '<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"/></svg>',
-  '网络操作系统': '<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418"/></svg>',
-  'Agent': '<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z"/></svg>',
-  '场景设计': '<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42"/></svg>',
-  '实操排查': '<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM10.5 7.5v6m3-3h-6"/></svg>',
-};
-
-function getTopicIcon(topicId: string): string | undefined {
-  for (const [key, svg] of Object.entries(topicIcons)) {
-    if (topicId.includes(key)) return svg;
-  }
-  return undefined;
-}
 ---
 
 <BaseLayout>
@@ -91,7 +74,7 @@ function getTopicIcon(topicId: string): string | undefined {
           技术答案与学习轨迹的结构化沉淀。
         </h1>
         <p class="text-body-lg text-on-surface-variant max-w-2xl">
-          面试题、学习笔记和工程复盘都会放在这里：方便检索，也方便不断修正自己的理解。
+          面试题、随笔和知识库都会放在这里：方便检索，也方便不断修正自己的理解。
         </p>
       </div>
 
@@ -100,14 +83,14 @@ function getTopicIcon(topicId: string): string | undefined {
 
       <!-- Quick Links -->
       <div class="flex flex-wrap justify-center gap-3 mt-2">
-        <a href="/interview/" class="px-6 py-2 bg-surface-container-low text-on-surface rounded-full text-label-md font-medium hover:bg-surface-container-high transition-colors">
+        <a href={withBase('/interview/')} class="px-6 py-2 bg-surface-container-low text-on-surface rounded-full text-label-md font-medium hover:bg-surface-container-high transition-colors">
           面试题
         </a>
-        <a href="/notes/" class="px-6 py-2 bg-surface-container-low text-on-surface rounded-full text-label-md font-medium hover:bg-surface-container-high transition-colors">
-          学习笔记
+        <a href={withBase('/notes/')} class="px-6 py-2 bg-surface-container-low text-on-surface rounded-full text-label-md font-medium hover:bg-surface-container-high transition-colors">
+          知识库
         </a>
-        <a href="/blog/" class="px-6 py-2 bg-surface-container-low text-on-surface rounded-full text-label-md font-medium hover:bg-surface-container-high transition-colors">
-          全部文章
+        <a href={withBase('/writing/')} class="px-6 py-2 bg-surface-container-low text-on-surface rounded-full text-label-md font-medium hover:bg-surface-container-high transition-colors">
+          随笔
         </a>
       </div>
 
@@ -131,8 +114,13 @@ function getTopicIcon(topicId: string): string | undefined {
           class="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container-low text-on-surface-variant hover:text-[#FB7299] hover:bg-surface-container-high transition-colors"
           aria-label="Bilibili"
         >
-          <svg class="w-[18px] h-[18px]" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M18.223 3.086a1.25 1.25 0 010 2.5L17.5 5.5l-1.06 1.06a10.02 10.02 0 016.061 6.123l.031.104c.319 1.132.468 2.291.468 3.463 0 5.523-4.477 10-10 10S2.95 21.773 2.95 16.25c0-1.172.15-2.33.468-3.463a10.02 10.02 0 016.06-6.123l.03-.01L8.38 5.5l-.66-.01a1.25 1.25 0 010-2.5l2.001.005L12 4.25l2.275-1.155.003.001a1.249 1.249 0 012.16.677l.011.156.001.049a1.25 1.25 0 01-1.245 1.246l-.454-.004-.554.55a10.05 10.05 0 00-4.394 0l-.554-.55-.454.004a1.25 1.25 0 01-1.245-1.246l.001-.049a1.25 1.25 0 011.353-1.106l.042.002.772.002.785-.497L12 4.25l-.275-.146-.004-.001a1.249 1.249 0 012.16-.677l.003.001L12 4.25l2.01 1.023.005.002 2.001-.005a1.25 1.25 0 012.207-.707V3.086zM12 8.25a4.5 4.5 0 100 9 4.5 4.5 0 000-9zm-3.5 2a1 1 0 110 2 1 1 0 010-2zm7 0a1 1 0 110 2 1 1 0 010-2z"/>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M8.5 5.5 6 3" />
+            <path d="m15.5 5.5 2.5-2.5" />
+            <rect x="3.5" y="6.5" width="17" height="13" rx="3.5" />
+            <path d="M8.5 11.5v2" />
+            <path d="M15.5 11.5v2" />
+            <path d="M10 16h4" />
           </svg>
         </a>
       </div>
@@ -144,7 +132,7 @@ function getTopicIcon(topicId: string): string | undefined {
         {[
           { value: String(interviewTopics.length), label: '专题' },
           { value: String(totalQuestions), label: '复习题' },
-          { value: String(notes.length), label: '笔记' },
+          { value: String(notes.length), label: '知识库' },
           { value: String(projectCount), label: '项目复盘' },
         ].map((stat) => (
           <div class="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-md flex flex-col items-center justify-center gap-2 shadow-[0_4px_12px_rgba(0,0,0,0.03)]">
@@ -159,7 +147,7 @@ function getTopicIcon(topicId: string): string | undefined {
     <section class="w-full flex flex-col gap-md">
       <div class="flex items-center justify-between">
         <h2 class="text-headline-md font-semibold text-primary">面试题专区</h2>
-        <a href="/interview/" class="text-label-md font-medium text-secondary hover:underline">查看全部</a>
+        <a href={withBase('/interview/')} class="text-label-md font-medium text-secondary hover:underline">查看全部</a>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
         {
@@ -169,18 +157,18 @@ function getTopicIcon(topicId: string): string | undefined {
               description={getTopicDescription(topic)}
               questionCount={questions.length}
               href={getTopicUrl(topic)}
-              icon={getTopicIcon(topic.id)}
+              icon={getInterviewTopicIcon(topic.id)}
             />
           ))
         }
       </div>
     </section>
 
-    <!-- Study Notes -->
+    <!-- Knowledge Base -->
     <section class="w-full flex flex-col gap-md">
       <div class="flex items-center justify-between">
-        <h2 class="text-headline-md font-semibold text-primary">学习笔记</h2>
-        <a href="/notes/" class="text-label-md font-medium text-secondary hover:underline">全部笔记</a>
+        <h2 class="text-headline-md font-semibold text-primary">知识库</h2>
+        <a href={withBase('/notes/')} class="text-label-md font-medium text-secondary hover:underline">查看全部</a>
       </div>
       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-gutter">
         {
@@ -188,7 +176,7 @@ function getTopicIcon(topicId: string): string | undefined {
             const latestDate = getGroupLatestModified(slug);
             return (
               <a
-                href={`/notes/${encodeURIComponent(slug)}/`}
+                href={withBase(`/notes/${encodeURIComponent(slug)}/`)}
                 class="group block p-6 bg-white rounded-xl border border-gray-200 hover:border-gray-300 hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)] transition-all duration-300"
               >
                 <div class="flex items-start justify-between mb-6">
@@ -218,7 +206,7 @@ function getTopicIcon(topicId: string): string | undefined {
     <section class="w-full flex flex-col gap-md">
       <div class="flex items-center justify-between">
         <h2 class="text-headline-md font-semibold text-primary">最近更新</h2>
-        <a href="/blog/" class="text-label-md font-medium text-secondary hover:underline">查看全部</a>
+        <a href={withBase('/writing/')} class="text-label-md font-medium text-secondary hover:underline">查看全部</a>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
         {latestPosts.map((entry) => <ArticleCard post={entry} href={getEntryUrl(entry)} />)}
