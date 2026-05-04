@@ -1,0 +1,18 @@
+---
+import { SITE } from '../consts';
+
+const year = new Date().getFullYear();
+---
+
+<footer class="w-full py-12 mt-auto bg-surface-container-low border-t border-surface-variant">
+  <div class="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop flex flex-col md:flex-row justify-between items-center gap-4">
+    <div class="font-sans text-label-sm font-semibold text-primary">
+      &copy; {year} {SITE.author}. All rights reserved.
+    </div>
+    <div class="flex gap-4 font-sans text-label-sm">
+      <a href="/rss.xml" class="text-on-surface-variant hover:text-primary transition-colors">RSS</a>
+      <a href="/archive/" class="text-on-surface-variant hover:text-primary transition-colors">归档</a>
+      <a href="/tags/" class="text-on-surface-variant hover:text-primary transition-colors">标签</a>
+    </div>
+  </div>
+</footer>

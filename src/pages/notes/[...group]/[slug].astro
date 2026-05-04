@@ -1,0 +1,36 @@
+---
+import { getCollection, render } from 'astro:content';
+import PostLayout from '../../../layouts/PostLayout.astro';
+import {
+  getNoteGroup,
+  isPublished
+} from '../../../lib/content';
+
+export async function getStaticPaths() {
+  const notes = await getCollection('notes', isPublished);
+  return notes.map((note) => {
+    const parts = note.id.split('/');
+    const slug = parts.pop()!;
+    const group = parts.join('/');
+    return {
+      params: { group: group || slug, slug: group ? slug : slug },
+      props: { note }
+    };
+  });
+}
+
+const { note } = Astro.props;
+const group = getNoteGroup(note);
+const parentGroup = note.id.split('/').slice(0, -1).join('/') || note.id;
+const { Content, headings } = await render(note);
+---
+
+<PostLayout
+  post={note}
+  headings={headings}
+  eyebrow="学习笔记"
+  backHref={`/notes/${encodeURIComponent(parentGroup)}/`}
+  backLabel={`返回 ${group}`}
+>
+  <Content />
+</PostLayout>

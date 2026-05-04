@@ -1,0 +1,138 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import Toc from '../components/Toc.astro';
+import TagList from '../components/TagList.astro';
+import { formatDate, getReadingMinutes, titleFromId, type EntryLike } from '../lib/content';
+
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  post: EntryLike;
+  headings: Heading[];
+  eyebrow?: string;
+  backHref?: string;
+  backLabel?: string;
+}
+
+const { post, headings, eyebrow, backHref, backLabel } = Astro.props;
+const minutes = getReadingMinutes(post);
+const title = post.data.title ?? titleFromId(post.id);
+const description = post.data.description ?? '';
+const date = post.data.pubDate ?? post.data.updatedDate;
+const category = eyebrow ?? post.data.category;
+---
+
+<BaseLayout title={title} description={description}>
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-gutter">
+    <!-- Main Article Content -->
+    <div class="lg:col-span-8 lg:col-start-1">
+      <!-- Back Link & Meta -->
+      <div class="mb-xl">
+        {
+          backHref && (
+            <a
+              href={backHref}
+              class="inline-flex items-center gap-2 text-label-md font-medium text-secondary hover:text-on-secondary-fixed-variant transition-colors mb-lg group"
+            >
+              <svg class="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              </svg>
+              {backLabel ?? '返回'}
+            </a>
+          )
+        }
+        <div class="flex items-center gap-4 mb-6 flex-wrap">
+          {category && (
+            <span class="px-3 py-1 rounded-full bg-surface-container-high text-label-sm font-medium text-on-surface-variant">
+              {category}
+            </span>
+          )}
+          {date && <span class="text-label-md font-medium text-outline">{formatDate(date)}</span>}
+          <span class="w-1 h-1 rounded-full bg-outline-variant hidden sm:block"></span>
+          <span class="text-label-md font-medium text-outline">{minutes} 分钟读完</span>
+        </div>
+        <h1 class="text-headline-xxl font-semibold text-on-surface mb-6 tracking-tight leading-tight">
+          {title}
+        </h1>
+        {description && (
+          <p class="text-body-lg text-on-surface-variant leading-relaxed">{description}</p>
+        )}
+        <div class="mt-4">
+          <TagList tags={post.data.tags ?? []} />
+        </div>
+        {
+          post.data.updatedDate && (
+            <p class="text-label-md text-outline mt-3">最后更新：{formatDate(post.data.updatedDate)}</p>
+          )
+        }
+      </div>
+
+      <!-- Article Body -->
+      <div class="post-content text-body-md text-on-surface leading-relaxed space-y-12" data-pagefind-body>
+        <slot />
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="hidden lg:block lg:col-span-3 lg:col-start-10 relative">
+      <div class="sticky top-24">
+        <Toc headings={headings} />
+      </div>
+    </aside>
+  </div>
+
+  <script type="module" is:inline>
+    const renderMermaidBlocks = async () => {
+      const blocks = Array.from(
+        document.querySelectorAll(
+          '.post-content pre[data-language="mermaid"] > code, .post-content pre > code.language-mermaid'
+        )
+      );
+
+      if (!blocks.length) return;
+
+      try {
+        const { default: mermaid } = await import(
+          'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs'
+        );
+
+        mermaid.initialize({
+          startOnLoad: false,
+          securityLevel: 'loose',
+          theme: 'base',
+          themeVariables: {
+            background: '#ffffff',
+            primaryColor: '#f3f3f5',
+            primaryTextColor: '#1a1c1d',
+            primaryBorderColor: '#c7c6ca',
+            lineColor: '#46464a',
+            secondaryColor: '#d7e3ff',
+            tertiaryColor: '#eeeef0',
+            fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif'
+          }
+        });
+
+        const diagrams = blocks.map((block) => {
+          const pre = block.closest('pre');
+          const diagram = document.createElement('div');
+          diagram.className = 'mermaid mermaid-render';
+          diagram.textContent = block.textContent?.trim() ?? '';
+          pre?.replaceWith(diagram);
+          return diagram;
+        });
+
+        await mermaid.run({ nodes: diagrams });
+      } catch (error) {
+        console.warn('Mermaid render failed', error);
+      }
+    };
+
+    document.addEventListener('DOMContentLoaded', renderMermaidBlocks);
+    document.addEventListener('astro:page-load', renderMermaidBlocks);
+    renderMermaidBlocks();
+  </script>
+</BaseLayout>

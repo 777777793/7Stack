@@ -1,0 +1,30 @@
+---
+import { getCollection, render } from 'astro:content';
+import PostLayout from '../../../layouts/PostLayout.astro';
+import {
+  getTopicTitle,
+  getTopicUrl,
+  isPublished
+} from '../../../lib/content';
+
+export async function getStaticPaths() {
+  const topics = await getCollection('interview', isPublished);
+  return topics.map((topic) => ({
+    params: { topic: topic.id },
+    props: { topic }
+  }));
+}
+
+const { topic } = Astro.props;
+const { Content, headings } = await render(topic);
+---
+
+<PostLayout
+  post={topic}
+  headings={headings}
+  eyebrow="面试题"
+  backHref={getTopicUrl(topic)}
+  backLabel={`返回 ${getTopicTitle(topic)} 题目列表`}
+>
+  <Content />
+</PostLayout>

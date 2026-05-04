@@ -1,0 +1,62 @@
+---
+import { NAV_ITEMS, SITE } from '../consts';
+
+interface Props {
+  currentPath?: string;
+}
+
+const { currentPath = '/' } = Astro.props;
+
+function isActive(href: string) {
+  if (href === '/') return currentPath === '/';
+  return currentPath.startsWith(href);
+}
+---
+
+<nav class="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-2xl border-b border-surface-variant/50 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
+  <div class="flex items-center justify-between px-margin-mobile md:px-margin-desktop h-14 max-w-7xl mx-auto">
+    <div class="flex items-center gap-8">
+      <a
+        href="/"
+        class="text-xl font-semibold tracking-tighter text-primary active:opacity-60 transition-opacity"
+        aria-label={`${SITE.title} 首页`}
+      >
+        {SITE.title}
+      </a>
+
+      <div class="hidden md:flex gap-1">
+        {
+          NAV_ITEMS.map((item) => (
+            <a
+              href={item.href}
+              class={`font-sans text-sm tracking-tight font-medium hover:text-secondary transition-colors duration-300 active:opacity-60 px-3 py-1.5 rounded-md ${
+                isActive(item.href)
+                  ? "text-primary font-semibold bg-surface-container-low"
+                  : "text-on-surface-variant"
+              }`}
+            >
+              {item.label}
+            </a>
+          ))
+        }
+      </div>
+    </div>
+
+    <div class="md:hidden flex items-center gap-1 overflow-x-auto">
+      {
+        NAV_ITEMS.slice(0, 4).map((item) => (
+          <a
+            href={item.href}
+            class={`shrink-0 font-sans text-xs tracking-tight font-medium hover:text-secondary transition-colors px-2 py-1 rounded-md ${
+              isActive(item.href)
+                ? "text-primary font-semibold bg-surface-container-low"
+                : "text-on-surface-variant"
+            }`}
+          >
+            {item.label}
+          </a>
+        ))
+      }
+    </div>
+  </div>
+</nav>

@@ -1,0 +1,50 @@
+---
+interface Props {
+  title: string;
+  description?: string;
+  questionCount: number;
+  href: string;
+  icon?: string;
+}
+
+const { title, description, questionCount, href, icon } = Astro.props;
+---
+
+<a
+  href={href}
+  class="group flex flex-col h-full bg-surface-container-lowest rounded-xl p-6 border border-surface-variant hover:border-secondary/30 hover:shadow-[0_8px_30px_rgba(0,0,0,0.05)] transition-all duration-300"
+>
+  <!-- 顶部：图标 + 题数标签 -->
+  <div class="flex items-center justify-between mb-5">
+    <div class="w-10 h-10 rounded-full bg-secondary-fixed text-secondary flex items-center justify-center">
+      {
+        icon ? (
+          <Fragment set:html={icon} />
+        ) : (
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+          </svg>
+        )
+      }
+    </div>
+    <span class="px-3 py-1 bg-surface-container-low text-on-surface-variant text-label-sm font-medium rounded-full">
+      {questionCount} 道题
+    </span>
+  </div>
+
+  <!-- 中间：分类标题 + 简介文字 -->
+  <h3 class="text-headline-md font-semibold text-primary mb-2 group-hover:text-secondary transition-colors tracking-tight">
+    {title}
+  </h3>
+  <p class="text-label-md text-on-surface-variant leading-relaxed flex-grow mb-6 line-clamp-3">
+    {description ?? `${title} 专题下的高频面试题，涵盖核心概念、底层原理与工程场景追问。`}
+  </p>
+
+  <!-- 底部：引导操作 -->
+  <div class="mt-auto flex items-center text-label-md font-medium text-secondary">
+    查看题目
+    <svg class="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+    </svg>
+  </div>
+</a>

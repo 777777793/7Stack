@@ -1,0 +1,20 @@
+---
+interface Props {
+  question: string;
+  level?: string;
+}
+
+const { question, level = '高频' } = Astro.props;
+---
+
+<aside class="my-6 p-5 bg-secondary-fixed/30 border border-secondary/20 rounded-lg">
+  <div class="mb-3">
+    <span class="inline-flex px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container text-label-sm font-medium mr-2">
+      {level}
+    </span>
+    <strong class="text-body-md text-primary">{question}</strong>
+  </div>
+  <div class="text-body-md text-on-surface leading-relaxed">
+    <slot />
+  </div>
+</aside>

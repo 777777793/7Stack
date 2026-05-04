@@ -1,0 +1,60 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import {
+  formatDate,
+  getEntryUrl,
+  isPublished,
+  sortEntriesByDate,
+  titleFromId
+} from '../lib/content';
+
+const posts = await getCollection('posts', isPublished);
+const entries = sortEntriesByDate(posts).filter((entry) => entry.data.pubDate);
+const groups = entries.reduce<Record<string, typeof entries>>((acc, entry) => {
+  const year = String(entry.data.pubDate!.getFullYear());
+  acc[year] = acc[year] ?? [];
+  acc[year].push(entry);
+  return acc;
+}, {});
+---
+
+<BaseLayout title="归档" description="按年份归档的全部文章。">
+  <div class="mb-lg">
+    <a href="/" class="inline-flex items-center gap-2 text-label-md font-medium text-secondary hover:text-on-secondary-fixed-variant transition-colors group">
+      <svg class="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+      </svg>
+      返回首页
+    </a>
+  </div>
+
+  <header class="mb-xl text-center max-w-3xl mx-auto pt-lg">
+    <p class="text-label-sm font-medium text-secondary uppercase tracking-widest mb-2">Archive</p>
+    <h1 class="text-headline-xxl font-semibold text-primary tracking-tight">归档</h1>
+    <p class="text-body-lg text-on-surface-variant max-w-2xl mx-auto mt-2 leading-relaxed">按时间回看自己的学习路线。</p>
+  </header>
+
+  <section class="flex flex-col gap-xxl max-w-3xl">
+    {
+      Object.entries(groups).map(([year, yearPosts]) => (
+        <div>
+          <h2 class="text-headline-lg font-semibold text-primary mb-md pb-2 border-b border-surface-variant">{year}</h2>
+          <div class="flex flex-col gap-3">
+            {yearPosts.map((post) => (
+              <div class="flex items-center gap-4 py-2">
+                <time datetime={post.data.pubDate!.toISOString()} class="text-label-sm text-outline w-[100px] shrink-0">
+                  {formatDate(post.data.pubDate!)}
+                </time>
+                <a href={getEntryUrl(post)} class="text-body-md text-primary hover:text-secondary transition-colors truncate">
+                  {post.data.title ?? titleFromId(post.id)}
+                </a>
+                <span class="text-label-sm text-on-surface-variant shrink-0 hidden sm:block">{post.data.category}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))
+    }
+  </section>
+</BaseLayout>

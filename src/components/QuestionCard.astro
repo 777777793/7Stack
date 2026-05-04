@@ -1,0 +1,24 @@
+---
+interface Props {
+  index: number;
+  title: string;
+  href: string;
+  topic: string;
+}
+
+const { index, title, href, topic } = Astro.props;
+---
+
+<a
+  href={href}
+  class="bg-white rounded-xl border border-gray-200 p-6 flex items-start gap-4 group transition-all duration-300 hover:border-blue-500/30 hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)]"
+>
+  <span class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-medium text-sm shrink-0">
+    {String(index).padStart(2, '0')}
+  </span>
+  <div class="min-w-0 flex items-center min-h-[40px]">
+    <h2 class="text-base font-semibold text-zinc-900 group-hover:text-blue-600 transition-colors leading-snug">
+      {title}
+    </h2>
+  </div>
+</a>

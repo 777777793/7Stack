@@ -1,0 +1,36 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getAllTags, isPublished, tagUrl } from '../../lib/content';
+
+const posts = await getCollection('posts', isPublished);
+const tags = getAllTags(posts);
+---
+
+<BaseLayout title="标签" description="按技术主题浏览文章。">
+  <div class="mb-lg">
+    <a href="/" class="inline-flex items-center gap-2 text-label-md font-medium text-secondary hover:text-on-secondary-fixed-variant transition-colors group">
+      <svg class="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+      </svg>
+      返回首页
+    </a>
+  </div>
+
+  <header class="mb-xl text-center max-w-3xl mx-auto pt-lg">
+    <p class="text-label-sm font-medium text-secondary uppercase tracking-widest mb-2">Tags</p>
+    <h1 class="text-headline-xxl font-semibold text-primary tracking-tight">标签索引</h1>
+    <p class="text-body-lg text-on-surface-variant max-w-2xl mx-auto mt-2 leading-relaxed">用标签把文章按技术主题串起来。</p>
+  </header>
+
+  <section class="flex flex-wrap gap-3" aria-label="标签列表">
+    {tags.map((tag) => (
+      <a
+        href={tagUrl(tag)}
+        class="inline-flex items-center px-4 py-2 rounded-full border border-secondary/20 text-secondary bg-secondary-fixed/50 hover:bg-secondary-fixed hover:text-on-secondary-fixed-variant transition-colors text-label-md font-medium"
+      >
+        {tag}
+      </a>
+    ))}
+  </section>
+</BaseLayout>

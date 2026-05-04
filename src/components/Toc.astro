@@ -1,0 +1,36 @@
+---
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  headings: Heading[];
+}
+
+const { headings } = Astro.props;
+const visibleHeadings = headings.filter((heading) => heading.depth >= 2 && heading.depth <= 3);
+---
+
+{
+  visibleHeadings.length > 0 && (
+    <nav aria-label="文章目录">
+      <h4 class="text-label-md font-semibold text-primary uppercase tracking-wider mb-4">目录</h4>
+      <div class="flex flex-col space-y-3 border-l-2 border-surface-variant pl-4">
+        {visibleHeadings.map((heading) => (
+          <a
+            href={`#${heading.slug}`}
+            class={`text-label-md font-medium transition-colors ${
+              heading.depth === 2
+                ? 'text-on-surface-variant hover:text-primary -ml-[18px] pl-4 border-l-2 border-transparent hover:border-secondary'
+                : 'text-outline hover:text-on-surface-variant pl-4'
+            }`}
+          >
+            {heading.text}
+          </a>
+        ))}
+      </div>
+    </nav>
+  )
+}

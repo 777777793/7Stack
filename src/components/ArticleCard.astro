@@ -1,0 +1,48 @@
+---
+import TagList from './TagList.astro';
+import {
+  formatDate,
+  getPostUrl,
+  getReadingMinutes,
+  titleFromId,
+  type EntryLike,
+  type Post
+} from '../lib/content';
+
+interface Props {
+  post: EntryLike;
+  href?: string;
+  label?: string;
+  compact?: boolean;
+}
+
+const { post, href, label, compact = false } = Astro.props;
+const title = post.data.title ?? titleFromId(post.id);
+const description = post.data.description ?? '';
+const date = post.data.pubDate ?? post.data.updatedDate;
+const url = href ?? getPostUrl(post as Post);
+const category = label ?? post.data.category ?? '文章';
+---
+
+<article class="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-lg hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] transition-all flex flex-col gap-4 h-full">
+  <div class="flex gap-2 items-center">
+    <span class="px-2.5 py-0.5 rounded-full text-label-sm font-medium bg-secondary-fixed text-on-secondary-fixed-variant">
+      {category}
+    </span>
+    {date && (
+      <span class="text-label-sm text-outline">
+        <time datetime={date.toISOString()}>{formatDate(date)}</time>
+      </span>
+    )}
+  </div>
+  <h2 class="text-headline-md font-semibold text-primary leading-tight">
+    <a href={url} class="hover:text-secondary transition-colors">{title}</a>
+  </h2>
+  {description && (
+    <p class="text-label-md text-on-surface-variant line-clamp-2 leading-relaxed">{description}</p>
+  )}
+  <div class="mt-auto pt-4 flex items-center justify-between">
+    <TagList tags={(post.data.tags ?? []).slice(0, 4)} compact />
+    <span class="text-label-sm text-outline shrink-0">{getReadingMinutes(post)} min</span>
+  </div>
+</article>

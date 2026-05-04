@@ -1,0 +1,44 @@
+---
+import { getCollection } from 'astro:content';
+import ArticleCard from '../../components/ArticleCard.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import {
+  getAllTags,
+  getEntryUrl,
+  isPublished,
+  sortEntriesByDate
+} from '../../lib/content';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts', isPublished);
+  return getAllTags(posts).map((tag) => ({
+    params: { tag },
+    props: { tag }
+  }));
+}
+
+const { tag } = Astro.props;
+const posts = await getCollection('posts', (post) => isPublished(post) && post.data.tags.includes(tag));
+const entries = sortEntriesByDate(posts);
+---
+
+<BaseLayout title={`标签：${tag}`} description={`所有带有 ${tag} 标签的文章。`}>
+  <div class="mb-lg">
+    <a href="/tags/" class="inline-flex items-center gap-2 text-label-md font-medium text-secondary hover:text-on-secondary-fixed-variant transition-colors group">
+      <svg class="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+      </svg>
+      返回标签索引
+    </a>
+  </div>
+
+  <header class="mb-xl text-center max-w-3xl mx-auto pt-lg">
+    <p class="text-label-sm font-medium text-secondary uppercase tracking-widest mb-2">Tag</p>
+    <h1 class="text-headline-xxl font-semibold text-primary tracking-tight">{tag}</h1>
+    <p class="text-body-lg text-on-surface-variant max-w-2xl mx-auto mt-2 leading-relaxed">共 {entries.length} 篇文章。</p>
+  </header>
+
+  <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+    {entries.map((entry) => <ArticleCard post={entry} href={getEntryUrl(entry)} />)}
+  </section>
+</BaseLayout>

@@ -1,0 +1,75 @@
+---
+const base = import.meta.env.BASE_URL;
+---
+
+<div class="w-full max-w-xl relative" aria-label="站内搜索">
+  <svg class="absolute left-4 top-1/2 -translate-y-1/2 text-outline w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+  </svg>
+  <input
+    type="search"
+    id="site-search"
+    placeholder="搜索文章、笔记..."
+    autocomplete="off"
+    data-search-input
+    class="w-full bg-surface-container-lowest border border-outline-variant rounded-full py-3 pl-[3rem] pr-4 text-body-md text-on-surface focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition-all shadow-[0_2px_8px_rgba(0,0,0,0.04)] placeholder:text-outline"
+  />
+  <div class="hidden mt-3" data-search-results aria-live="polite"></div>
+</div>
+
+<script define:vars={{ base }}>
+  const input = document.querySelector('[data-search-input]');
+  const results = document.querySelector('[data-search-results]');
+  let pagefind;
+
+  async function getPagefind() {
+    if (!pagefind) {
+      pagefind = await import(`${base}pagefind/pagefind.js`);
+      await pagefind.options({
+        excerptLength: 18
+      });
+    }
+    return pagefind;
+  }
+
+  function clearResults() {
+    results.innerHTML = '';
+    results.classList.add('hidden');
+  }
+
+  input?.addEventListener('input', async (event) => {
+    const query = (event.target as HTMLInputElement).value.trim();
+    if (query.length < 2) {
+      clearResults();
+      return;
+    }
+
+    results.innerHTML = '<p class="text-label-sm text-on-surface-variant p-4 text-center">检索中...</p>';
+    results.classList.remove('hidden');
+
+    try {
+      const search = await (await getPagefind()).search(query);
+      const items = await Promise.all(
+        search.results.slice(0, 6).map((result: any) => result.data())
+      );
+
+      if (items.length === 0) {
+        results.innerHTML = '<p class="text-label-sm text-on-surface-variant p-4 text-center">没有找到相关内容。</p>';
+        return;
+      }
+
+      results.innerHTML = items
+        .map(
+          (item: any) => `
+            <a class="block p-3 bg-surface-container-lowest border border-surface-variant rounded-lg mb-2 hover:border-secondary transition-colors" href="${item.url}">
+              <strong class="text-label-md text-primary block">${item.meta.title}</strong>
+              <span class="text-label-sm text-on-surface-variant">${item.excerpt}</span>
+            </a>
+          `
+        )
+        .join('');
+    } catch {
+      results.innerHTML = '<p class="text-label-sm text-on-surface-variant p-4 text-center">搜索索引未生成，请先运行 npm run build。</p>';
+    }
+  });
+</script>

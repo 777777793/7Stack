@@ -1,0 +1,27 @@
+---
+import { tagUrl } from '../lib/content';
+
+interface Props {
+  tags: string[];
+  compact?: boolean;
+}
+
+const { tags, compact = false } = Astro.props;
+---
+
+{
+  tags.length > 0 && (
+    <div class="flex flex-wrap gap-2" aria-label="标签">
+      {tags.map((tag) => (
+        <a
+          href={tagUrl(tag)}
+          class={`inline-flex items-center rounded-full border border-secondary/20 text-secondary bg-secondary-fixed/50 hover:bg-secondary-fixed hover:text-on-secondary-fixed-variant transition-colors ${
+            compact ? 'min-h-[26px] px-2 text-xs' : 'min-h-[30px] px-3 text-label-sm'
+          } font-medium`}
+        >
+          {tag}
+        </a>
+      ))}
+    </div>
+  )
+}

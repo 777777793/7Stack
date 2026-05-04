@@ -1,0 +1,180 @@
+---
+import { getCollection } from 'astro:content';
+import { existsSync, readdirSync, statSync } from 'node:fs';
+import { join } from 'node:path';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import {
+  formatDate,
+  formatFolderName,
+  getNoteUrl,
+  isPublished,
+  titleFromId
+} from '../../lib/content';
+
+export async function getStaticPaths() {
+  const notes = await getCollection('notes', isPublished);
+  const groupPaths = new Set<string>();
+  for (const note of notes) {
+    const parts = note.id.split('/');
+    for (let i = 1; i < parts.length; i++) {
+      groupPaths.add(parts.slice(0, i).join('/'));
+    }
+  }
+  return [...groupPaths].map((group) => ({
+    params: { group },
+    props: { group }
+  }));
+}
+
+const { group } = Astro.props;
+const groupName = formatFolderName(group.split('/').pop()!);
+const groupSegments = group.split('/');
+const notesRoot = join(process.cwd(), 'src/content/notes');
+
+const allNotes = await getCollection('notes', (note) =>
+  isPublished(note) && note.id.startsWith(group + '/')
+);
+
+const directNotes = allNotes.filter((note) => {
+  const parts = note.id.split('/');
+  return parts.length === groupSegments.length + 1;
+});
+
+const subGroupNotes = allNotes.filter((note) => {
+  const parts = note.id.split('/');
+  return parts.length > groupSegments.length + 1;
+});
+
+function groupSubNotes(notes: typeof allNotes) {
+  return notes.reduce<Record<string, typeof allNotes>>((groups, note) => {
+    const subGroup = note.id.split('/')[groupSegments.length];
+    groups[subGroup] = groups[subGroup] ?? [];
+    groups[subGroup].push(note);
+    return groups;
+  }, {});
+}
+
+const subGroups = groupSubNotes(subGroupNotes);
+
+function getFolderLatestModified(folderPath: string) {
+  if (!existsSync(folderPath)) return undefined;
+  const latestTime = readdirSync(folderPath, { withFileTypes: true })
+    .filter((item) => item.isFile() && /\.(md|mdx)$/i.test(item.name))
+    .reduce((latest, item) => {
+      const modifiedTime = statSync(join(folderPath, item.name)).mtimeMs;
+      return Math.max(latest, modifiedTime);
+    }, 0);
+  return latestTime > 0 ? new Date(latestTime) : undefined;
+}
+
+function getNoteDate(note: (typeof allNotes)[number]) {
+  const frontmatterDate = note.data.updatedDate ?? note.data.pubDate;
+  if (frontmatterDate) return frontmatterDate;
+  for (const ext of ['.md', '.mdx']) {
+    const filePath = join(notesRoot, `${note.id}${ext}`);
+    if (existsSync(filePath)) return statSync(filePath).mtime;
+  }
+  return undefined;
+}
+---
+
+<BaseLayout title={`${groupName} 学习笔记`} description={`${groupName} 文件夹下的所有学习笔记。`}>
+  <div class="mb-lg">
+    <a href="/notes/" class="inline-flex items-center gap-2 text-label-md font-medium text-secondary hover:text-on-secondary-fixed-variant transition-colors group">
+      <svg class="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+      </svg>
+      返回学习笔记
+    </a>
+  </div>
+
+  <header class="mb-xl text-center max-w-3xl mx-auto pt-lg">
+    <p class="text-label-sm font-medium text-secondary uppercase tracking-widest mb-2">Note Folder</p>
+    <h1 class="text-headline-xxl font-semibold text-primary tracking-tight">{groupName}</h1>
+    <p class="text-body-lg text-on-surface-variant max-w-2xl mx-auto mt-2 leading-relaxed">
+      {subGroupNotes.length > 0 && `${Object.keys(subGroups).length} 个子文件夹 · `}
+      共 {directNotes.length} 篇笔记
+    </p>
+  </header>
+
+  {
+    Object.keys(subGroups).length > 0 && (
+      <section class="mb-xxl" aria-label="子文件夹">
+        <h2 class="text-headline-md font-semibold text-primary tracking-tight mb-md border-b border-surface-variant pb-2">子文件夹</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+          {
+            Object.entries(subGroups).map(([subGroup, subNotes]) => {
+              const folderPath = join(notesRoot, group, subGroup);
+              const latestDate = getFolderLatestModified(folderPath);
+              return (
+                <a
+                  href={`/notes/${encodeURIComponent(group)}/${encodeURIComponent(subGroup)}/`}
+                  class="group block p-lg bg-surface-container-lowest rounded-xl border border-surface-variant hover:border-outline-variant transition-all hover:shadow-[0_8px_32px_rgba(0,0,0,0.05)] shadow-[0_4px_24px_rgba(0,0,0,0.03)]"
+                >
+                  <div class="flex items-start justify-between mb-6">
+                    <div class="p-2 bg-surface-container rounded-lg group-hover:bg-secondary-fixed transition-colors">
+                      <svg class="w-6 h-6 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                      </svg>
+                    </div>
+                    <svg class="w-5 h-5 text-outline-variant group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                  <h3 class="text-headline-md font-semibold text-primary mb-2 tracking-tight">
+                    {formatFolderName(subGroup)}
+                  </h3>
+                  <div class="flex items-center gap-2 text-label-sm font-medium text-on-surface-variant">
+                    <span>{subNotes.length} 篇笔记</span>
+                    {latestDate && (
+                      <>
+                        <span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+                        <span>更新 {formatDate(latestDate)}</span>
+                      </>
+                    )}
+                  </div>
+                </a>
+              );
+            })
+          }
+        </div>
+      </section>
+    )
+  }
+
+  {
+    directNotes.length > 0 && (
+      <section aria-label="笔记列表">
+        <h2 class="text-headline-md font-semibold text-primary tracking-tight mb-md border-b border-surface-variant pb-2">笔记</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+          {
+            directNotes.map((note) => {
+              const date = getNoteDate(note);
+              return (
+                <a
+                  href={getNoteUrl(note)}
+                  class="group flex flex-col p-6 bg-surface-container-lowest rounded-lg border border-surface-variant hover:border-secondary transition-colors min-h-[160px]"
+                >
+                  <div class="flex items-center gap-2 mb-4">
+                    <svg class="w-5 h-5 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span class="text-label-sm font-medium text-on-surface-variant uppercase tracking-widest">MD</span>
+                  </div>
+                  <h3 class="text-body-md font-semibold text-primary mb-2 line-clamp-2 group-hover:text-secondary transition-colors leading-relaxed">
+                    {note.data.title ?? titleFromId(note.id)}
+                  </h3>
+                  {date && (
+                    <div class="mt-auto pt-4 text-label-sm font-medium text-on-surface-variant">
+                      {formatDate(date)}
+                    </div>
+                  )}
+                </a>
+              );
+            })
+          }
+        </div>
+      </section>
+    )
+  }
+</BaseLayout>

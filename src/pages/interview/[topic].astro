@@ -1,0 +1,83 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import QuestionCard from '../../components/QuestionCard.astro';
+import {
+  getTopicDescription,
+  getTopicFullUrl,
+  getTopicTitle,
+  isPublished,
+  sortInterviewTopics
+} from '../../lib/content';
+
+export async function getStaticPaths() {
+  const topics = await getCollection('interview', isPublished);
+  return topics.map((topic) => ({
+    params: { topic: topic.id },
+    props: { topic }
+  }));
+}
+
+const { topic } = Astro.props;
+const topics = sortInterviewTopics(await getCollection('interview', isPublished));
+const { headings } = await render(topic);
+const questions = headings.filter((heading) => heading.depth === 2);
+const title = getTopicTitle(topic);
+const fullUrl = getTopicFullUrl(topic);
+---
+
+<BaseLayout title={`${title} 面试题`} description={getTopicDescription(topic)}>
+  <header class="mb-xl text-center max-w-3xl mx-auto pt-lg">
+    <p class="text-xs font-semibold tracking-widest uppercase text-blue-600 mb-3">Interview Topic</p>
+    <h1 class="text-4xl font-semibold tracking-tight text-zinc-900">{title}</h1>
+    <p class="text-body-lg text-on-surface-variant max-w-2xl mx-auto mt-3 leading-relaxed">
+      {getTopicDescription(topic)}
+    </p>
+    <div class="flex justify-center gap-3 mt-8">
+      <a
+        href={fullUrl}
+        class="inline-flex items-center px-5 py-2.5 border border-gray-200 hover:bg-gray-50 rounded-full text-sm font-medium transition-colors text-zinc-900"
+      >
+        打开完整内容
+      </a>
+      <a
+        href="/interview/"
+        class="inline-flex items-center px-5 py-2.5 border border-gray-200 hover:bg-gray-50 rounded-full text-sm font-medium transition-colors text-zinc-500"
+      >
+        返回专题列表
+      </a>
+    </div>
+  </header>
+
+  <!-- Topic Strip -->
+  <div class="flex flex-wrap justify-center gap-2 mb-xl" aria-label="专题切换">
+    {
+      topics.map((item) => (
+        <a
+          href={`/interview/${encodeURIComponent(item.id)}/`}
+          class={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+            item.id === topic.id
+              ? 'bg-white border border-gray-200 shadow-sm text-zinc-900'
+              : 'text-zinc-500 hover:text-zinc-900 hover:bg-gray-100'
+          }`}
+        >
+          {getTopicTitle(item)}
+        </a>
+      ))
+    }
+  </div>
+
+  <!-- Questions Grid -->
+  <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {
+      questions.map((question, index) => (
+        <QuestionCard
+          index={index + 1}
+          title={question.text}
+          topic={title}
+          href={`${fullUrl}#${question.slug}`}
+        />
+      ))
+    }
+  </section>
+</BaseLayout>
