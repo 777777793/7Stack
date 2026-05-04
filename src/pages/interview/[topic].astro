@@ -31,11 +31,11 @@ const fullUrl = getTopicFullUrl(topic);
 <BaseLayout title={`${title} 面试题`} description={getTopicDescription(topic)}>
   <header class="mb-xl text-center max-w-3xl mx-auto pt-lg">
     <p class="text-xs font-semibold tracking-widest uppercase text-blue-600 mb-3">Interview Topic</p>
-    <h1 class="text-4xl font-semibold tracking-tight text-zinc-900">{title}</h1>
+    <h1 class="text-headline-xl font-semibold tracking-tight text-zinc-900">{title}</h1>
     <p class="text-body-lg text-on-surface-variant max-w-2xl mx-auto mt-3 leading-relaxed">
       {getTopicDescription(topic)}
     </p>
-    <div class="flex justify-center gap-3 mt-8">
+    <div class="flex flex-wrap justify-center gap-3 mt-8">
       <a
         href={fullUrl}
         class="inline-flex items-center px-5 py-2.5 border border-gray-200 hover:bg-gray-50 rounded-full text-sm font-medium transition-colors text-zinc-900"

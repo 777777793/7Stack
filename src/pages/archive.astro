@@ -44,11 +44,11 @@ const groups = entries.reduce<Record<string, typeof entries>>((acc, entry) => {
           <h2 class="text-headline-lg font-semibold text-primary mb-md pb-2 border-b border-surface-variant">{year}</h2>
           <div class="flex flex-col gap-3">
             {yearPosts.map((post) => (
-              <div class="flex items-center gap-4 py-2">
-                <time datetime={post.data.pubDate!.toISOString()} class="text-label-sm text-outline w-[100px] shrink-0">
+              <div class="flex flex-col gap-1 py-2 sm:flex-row sm:items-center sm:gap-4">
+                <time datetime={post.data.pubDate!.toISOString()} class="text-label-sm text-outline sm:w-[100px] shrink-0">
                   {formatDate(post.data.pubDate!)}
                 </time>
-                <a href={getEntryUrl(post)} class="text-body-md text-primary hover:text-secondary transition-colors truncate">
+                <a href={getEntryUrl(post)} class="text-body-md text-primary hover:text-secondary transition-colors sm:truncate">
                   {post.data.title ?? titleFromId(post.id)}
                 </a>
                 <span class="text-label-sm text-on-surface-variant shrink-0 hidden sm:block">{post.data.category}</span>

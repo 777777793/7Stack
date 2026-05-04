@@ -25,7 +25,7 @@ const category = label ?? post.data.category ?? '文章';
 ---
 
 <article class="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-lg hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] transition-all flex flex-col gap-4 h-full">
-  <div class="flex gap-2 items-center">
+  <div class="flex flex-wrap gap-2 items-center">
     <span class="px-2.5 py-0.5 rounded-full text-label-sm font-medium bg-secondary-fixed text-on-secondary-fixed-variant">
       {category}
     </span>
@@ -41,7 +41,7 @@ const category = label ?? post.data.category ?? '文章';
   {description && (
     <p class="text-label-md text-on-surface-variant line-clamp-2 leading-relaxed">{description}</p>
   )}
-  <div class="mt-auto pt-4 flex items-center justify-between">
+  <div class="mt-auto pt-4 flex flex-wrap items-center justify-between gap-3">
     <TagList tags={(post.data.tags ?? []).slice(0, 4)} compact />
     <span class="text-label-sm text-outline shrink-0">{getReadingMinutes(post)} min</span>
   </div>

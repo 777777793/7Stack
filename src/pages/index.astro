@@ -170,14 +170,14 @@ const totalQuestions = topicCards.reduce(
         <h2 class="text-headline-md font-semibold text-primary">知识库</h2>
         <a href={withBase('/notes/')} class="text-label-md font-medium text-secondary hover:underline">查看全部</a>
       </div>
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-gutter">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-gutter">
         {
           noteGroupEntries.map(([slug, groupNotes]) => {
             const latestDate = getGroupLatestModified(slug);
             return (
               <a
                 href={withBase(`/notes/${encodeURIComponent(slug)}/`)}
-                class="group block p-6 bg-white rounded-xl border border-gray-200 hover:border-gray-300 hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)] transition-all duration-300"
+                class="group block p-5 sm:p-6 bg-white rounded-xl border border-gray-200 hover:border-gray-300 hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)] transition-all duration-300"
               >
                 <div class="flex items-start justify-between mb-6">
                   <div class="p-2 bg-gray-50 rounded-lg group-hover:bg-blue-50 transition-colors">

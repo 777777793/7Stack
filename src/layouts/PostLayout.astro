@@ -24,12 +24,13 @@ const title = post.data.title ?? titleFromId(post.id);
 const description = post.data.description ?? '';
 const date = post.data.pubDate ?? post.data.updatedDate;
 const category = eyebrow ?? post.data.category;
+const hasToc = headings.some((heading) => heading.depth >= 2 && heading.depth <= 3);
 ---
 
 <BaseLayout title={title} description={description}>
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-gutter">
     <!-- Main Article Content -->
-    <div class="lg:col-span-8 lg:col-start-1">
+    <div class="min-w-0 lg:col-span-8 lg:col-start-1">
       <!-- Back Link & Meta -->
       <div class="mb-xl">
         {
@@ -55,7 +56,7 @@ const category = eyebrow ?? post.data.category;
           <span class="w-1 h-1 rounded-full bg-outline-variant hidden sm:block"></span>
           <span class="text-label-md font-medium text-outline">{minutes} 分钟读完</span>
         </div>
-        <h1 class="text-headline-xxl font-semibold text-on-surface mb-6 tracking-tight leading-tight">
+        <h1 class="text-headline-xxl font-semibold text-on-surface mb-6 tracking-tight leading-tight break-words">
           {title}
         </h1>
         {description && (
@@ -71,8 +72,19 @@ const category = eyebrow ?? post.data.category;
         }
       </div>
 
+      {
+        hasToc && (
+          <details class="lg:hidden mb-lg rounded-xl border border-surface-variant bg-surface-container-lowest p-4">
+            <summary class="cursor-pointer text-label-md font-semibold text-primary">文章目录</summary>
+            <div class="mt-4">
+              <Toc headings={headings} />
+            </div>
+          </details>
+        )
+      }
+
       <!-- Article Body -->
-      <div class="post-content text-body-md text-on-surface leading-relaxed space-y-12" data-pagefind-body>
+      <div class="post-content min-w-0 text-body-md text-on-surface leading-relaxed space-y-12" data-pagefind-body>
         <slot />
       </div>
     </div>
