@@ -1,0 +1,155 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import {
+  getTopicFullUrl,
+  getTopicTitle,
+  isPublished,
+  sortInterviewTopics,
+  withBase
+} from '../../lib/content';
+
+const topics = sortInterviewTopics(await getCollection('interview', isPublished));
+const logs = await getCollection('interviewLogs');
+
+const topicQuestionGroups = await Promise.all(
+  topics.map(async (topic) => {
+    const { headings } = await render(topic);
+    const topicTitle = getTopicTitle(topic);
+    const fullUrl = getTopicFullUrl(topic);
+
+    return headings
+      .filter((heading) => heading.depth === 2)
+      .map((heading) => ({
+        key: `${topicTitle}::${heading.text}`,
+        href: `${fullUrl}#${heading.slug}`
+      }));
+  })
+);
+
+const questionHrefMap = new Map(
+  topicQuestionGroups.flat().map((question) => [question.key, question.href])
+);
+
+function formatDate(date: Date) {
+  return new Intl.DateTimeFormat('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(date);
+}
+
+const logItems = logs
+  .flatMap((log) => {
+    const fallbackDate = log.data.date ?? new Date(0);
+    return log.data.items.map((item) => {
+      const updatedDate = item.updatedDate ?? fallbackDate;
+      return {
+        no: item.no,
+        title: item.title,
+        category: item.category,
+        updatedDate,
+        dateText: formatDate(updatedDate),
+        href: item.href ? withBase(item.href) : questionHrefMap.get(`${item.category}::${item.title}`) ?? withBase('/interview/')
+      };
+    });
+  })
+  .sort((a, b) => b.no - a.no);
+---
+
+<BaseLayout title="面试题更新日志" description="记录面试题内容的新增、删减和调整。">
+  <div class="mb-lg">
+    <a href={withBase('/interview/')} class="inline-flex items-center gap-2 text-label-md font-medium text-secondary hover:text-on-secondary-fixed-variant transition-colors group">
+      <svg class="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+      </svg>
+      返回面试题
+    </a>
+  </div>
+
+  <header class="mb-xl text-center max-w-3xl mx-auto pt-lg">
+    <p class="text-label-sm font-medium text-secondary uppercase tracking-widest mb-2">Interview Changelog</p>
+    <h1 class="text-headline-xxl font-semibold text-primary tracking-tight">题目更新日志</h1>
+    <p class="text-body-lg text-on-surface-variant max-w-2xl mx-auto mt-2 leading-relaxed">
+      按日志记录题库新增与调整，支持按题目或分类快速检索。
+    </p>
+  </header>
+
+  <section class="mb-xl" aria-label="搜索更新日志">
+    <div class="relative mx-auto max-w-2xl">
+      <svg class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-on-surface-variant" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" />
+      </svg>
+      <input
+        type="search"
+        data-log-search
+        class="w-full rounded-full border border-surface-variant bg-white py-4 pl-12 pr-4 text-body-md text-primary outline-none transition-colors placeholder:text-on-surface-variant focus:border-secondary focus:ring-4 focus:ring-secondary/10"
+        placeholder="搜索题目或分类"
+        autocomplete="off"
+      />
+    </div>
+  </section>
+
+  <section aria-label="题目更新日志列表">
+    <div class="overflow-hidden rounded-xl border border-surface-variant bg-white">
+      <div class="hidden grid-cols-[5rem_1fr_9rem_9rem] gap-4 border-b border-surface-variant bg-surface-container-low px-5 py-3 text-label-sm font-semibold text-on-surface-variant md:grid">
+        <span>序号</span>
+        <span>题目</span>
+        <span>分类</span>
+        <span>更新时间</span>
+      </div>
+      <div data-log-list>
+        {
+          logItems.map((item) => (
+            <a
+              href={item.href}
+              data-log-item
+              data-search-text={`${item.no} ${item.title} ${item.category} ${item.dateText}`}
+              class="grid gap-3 border-b border-surface-variant px-5 py-4 transition-colors last:border-b-0 hover:bg-surface-container-low md:grid-cols-[5rem_1fr_9rem_9rem] md:items-center md:gap-4"
+            >
+              <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-blue-50 text-label-sm font-semibold text-blue-600">
+                {String(item.no).padStart(2, '0')}
+              </span>
+              <h2 class="text-body-md font-semibold leading-snug text-primary">
+                {item.title}
+              </h2>
+              <span class="w-fit rounded-full bg-surface-container-low px-3 py-1 text-label-sm font-medium text-on-surface-variant">
+                {item.category}
+              </span>
+              <time class="text-label-md text-on-surface-variant" datetime={item.updatedDate.toISOString()}>
+                {item.dateText}
+              </time>
+            </a>
+          ))
+        }
+      </div>
+      <p data-log-empty class="hidden px-5 py-10 text-center text-body-md text-on-surface-variant">
+        没有找到匹配的题目。
+      </p>
+    </div>
+  </section>
+
+  <script>
+    const searchInput = document.querySelector('[data-log-search]');
+    const logItems = Array.from(document.querySelectorAll('[data-log-item]'));
+    const emptyState = document.querySelector('[data-log-empty]');
+
+    function normalizeText(value) {
+      return String(value).toLowerCase().replace(/\s+/g, '');
+    }
+
+    searchInput?.addEventListener('input', () => {
+      const query = normalizeText(searchInput.value);
+      let visibleCount = 0;
+
+      logItems.forEach((item) => {
+        const text = normalizeText(item.getAttribute('data-search-text') ?? '');
+        const visible = !query || text.includes(query);
+        item.classList.toggle('hidden', !visible);
+        if (visible) visibleCount += 1;
+      });
+
+      emptyState?.classList.toggle('hidden', visibleCount > 0);
+    });
+  </script>
+</BaseLayout>
