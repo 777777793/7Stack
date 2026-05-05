@@ -74,8 +74,8 @@ const hasToc = headings.some((heading) => heading.depth >= 2 && heading.depth <=
 
       {
         hasToc && (
-          <details class="lg:hidden mb-lg rounded-xl border border-surface-variant bg-surface-container-lowest p-4">
-            <summary class="cursor-pointer text-label-md font-semibold text-primary">文章目录</summary>
+          <details class="mobile-toc lg:hidden sticky top-16 z-40 mb-lg rounded-xl border border-surface-variant bg-surface-container-lowest/95 p-4 shadow-[0_10px_28px_rgba(0,0,0,0.08)] backdrop-blur-xl">
+            <summary class="cursor-pointer select-none text-label-md font-semibold text-primary">文章目录</summary>
             <div class="mt-4">
               <Toc headings={headings} />
             </div>
@@ -146,5 +146,24 @@ const hasToc = headings.some((heading) => heading.depth >= 2 && heading.depth <=
     document.addEventListener('DOMContentLoaded', renderMermaidBlocks);
     document.addEventListener('astro:page-load', renderMermaidBlocks);
     renderMermaidBlocks();
+
+    const bindMobileToc = () => {
+      document.querySelectorAll('.mobile-toc a[href^="#"]').forEach((link) => {
+        if (link.dataset.mobileTocBound === 'true') return;
+        link.dataset.mobileTocBound = 'true';
+        link.addEventListener('click', () => {
+          const details = link.closest('details');
+          if (details) {
+            window.setTimeout(() => {
+              details.open = false;
+            }, 120);
+          }
+        });
+      });
+    };
+
+    document.addEventListener('DOMContentLoaded', bindMobileToc);
+    document.addEventListener('astro:page-load', bindMobileToc);
+    bindMobileToc();
   </script>
 </BaseLayout>

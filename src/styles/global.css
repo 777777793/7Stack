@@ -307,4 +307,16 @@ body {
     font-size: 0.88em;
     white-space: nowrap;
   }
+
+  .mobile-toc {
+    max-height: calc(100dvh - 5rem);
+  }
+
+  .mobile-toc[open] {
+    overflow: hidden;
+  }
+
+  .mobile-toc[open] nav {
+    max-height: calc(100dvh - 9rem);
+  }
 }
