@@ -2,18 +2,20 @@
 const base = import.meta.env.BASE_URL;
 ---
 
-<div class="w-full max-w-[36rem] relative" aria-label="站内搜索">
-  <svg class="absolute left-4 top-1/2 -translate-y-1/2 text-outline w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-  </svg>
-  <input
-    type="search"
-    id="site-search"
-    placeholder="搜索随笔、知识库..."
-    autocomplete="off"
-    data-search-input
-    class="w-full bg-surface-container-lowest border border-outline-variant rounded-full py-3 pl-12 pr-4 text-body-md text-on-surface focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition-all shadow-[0_2px_8px_rgba(0,0,0,0.04)] placeholder:text-outline"
-  />
+<div class="w-full max-w-[36rem]" aria-label="站内搜索">
+  <div class="relative">
+    <svg class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-outline w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+    </svg>
+    <input
+      type="search"
+      id="site-search"
+      placeholder="搜索随笔、知识库..."
+      autocomplete="off"
+      data-search-input
+      class="w-full bg-surface-container-lowest border border-outline-variant rounded-full py-3 pl-12 pr-4 text-body-md text-on-surface focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition-all shadow-[0_2px_8px_rgba(0,0,0,0.04)] placeholder:text-outline"
+    />
+  </div>
   <div class="hidden mt-3 text-left" data-search-results aria-live="polite"></div>
 </div>
 
@@ -63,7 +65,7 @@ const base = import.meta.env.BASE_URL;
 
   function rankResult(item, query) {
     const normalizedQuery = normalizeText(query);
-    const title = normalizeText(item.meta?.title);
+    const title = normalizeText(item.title);
     const url = normalizeText(item.url);
     const excerpt = normalizeText(getPlainText(item.excerpt));
     const fullText = `${title} ${url} ${excerpt}`;
@@ -79,6 +81,52 @@ const base = import.meta.env.BASE_URL;
     if (excerpt.includes(normalizedQuery)) score += 40;
     if (hasExactMatch) score += 20;
     return score;
+  }
+
+  function getMatchedText(text, query) {
+    const plainText = (text ?? '').replace(/\s+/g, ' ').trim();
+    const index = plainText.toLowerCase().indexOf(query.toLowerCase());
+    if (index >= 0) return plainText.slice(index, index + query.length);
+    return query;
+  }
+
+  function withTextFragment(url, excerpt, query) {
+    if (!url || !excerpt || query.length < 2 || url.includes(':~:text=')) {
+      return url;
+    }
+
+    const text = getMatchedText(getPlainText(excerpt), query);
+    if (!text) return url;
+
+    const separator = url.includes('#') ? ':~:text=' : '#:~:text=';
+    return `${url}${separator}${encodeURIComponent(text)}`;
+  }
+
+  function getCandidates(item, query) {
+    const pageTitle = item.meta?.title ?? item.title ?? '';
+    const subResults = Array.isArray(item.sub_results) ? item.sub_results : [];
+    const candidates = [
+      ...subResults.map((result) => ({
+        title: result.title || pageTitle,
+        pageTitle,
+        url: result.url || item.url,
+        excerpt: result.excerpt || item.excerpt
+      })),
+      {
+        title: pageTitle,
+        pageTitle,
+        url: item.url,
+        excerpt: item.excerpt
+      }
+    ];
+
+    return candidates
+      .map((candidate) => ({
+        ...candidate,
+        url: withTextFragment(candidate.url, candidate.excerpt, query),
+        score: rankResult(candidate, query)
+      }))
+      .filter((candidate) => candidate.score >= 0);
   }
 
   input?.addEventListener('input', async (event) => {
@@ -98,13 +146,22 @@ const base = import.meta.env.BASE_URL;
       const rawItems = await Promise.all(
         search.results.slice(0, 100).map((result) => result.data())
       );
-      const items = rawItems
-        .map((item) => ({ item, score: rankResult(item, query) }))
-        .filter((result) => result.score >= 0)
+      const candidates = rawItems.flatMap((item) => getCandidates(item, query));
+      const seen = new Set();
+      const items = candidates
         .sort((a, b) => b.score - a.score)
-        .slice(0, 6)
-        .map((result) => result.item);
-      const displayItems = items.length > 0 ? items : rawItems.slice(0, 6);
+        .filter((item) => {
+          const key = `${item.url}|${item.title}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        })
+        .slice(0, 6);
+      const displayItems = items.length > 0 ? items : rawItems.slice(0, 6).map((item) => ({
+        title: item.meta?.title,
+        url: item.url,
+        excerpt: item.excerpt
+      }));
 
       if (displayItems.length === 0) {
         results.innerHTML = '<p class="text-label-sm text-on-surface-variant p-4 text-center">没有找到相关内容。</p>';
@@ -115,7 +172,7 @@ const base = import.meta.env.BASE_URL;
         .map(
           (item) => `
             <a class="block p-3 bg-surface-container-lowest border border-surface-variant rounded-lg mb-2 hover:border-secondary transition-colors" href="${withBasePath(item.url)}">
-              <strong class="text-label-md text-primary block">${item.meta.title}</strong>
+              <strong class="text-label-md text-primary block">${item.title}</strong>
               <span class="text-label-sm text-on-surface-variant">${item.excerpt}</span>
             </a>
           `
