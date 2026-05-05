@@ -1,0 +1,135 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import InterviewTopicStrip from '../../components/InterviewTopicStrip.astro';
+import {
+  getTopicFullUrl,
+  getTopicTitle,
+  isPublished,
+  sortInterviewTopics,
+  withBase
+} from '../../lib/content';
+
+const topics = sortInterviewTopics(await getCollection('interview', isPublished));
+const randomQuestionGroups = await Promise.all(
+  topics.map(async (topic) => {
+    const { headings } = await render(topic);
+    const title = getTopicTitle(topic);
+    const fullUrl = getTopicFullUrl(topic);
+
+    return headings
+      .filter((heading) => heading.depth === 2)
+      .map((heading) => ({
+        title: heading.text,
+        topic: title,
+        href: `${fullUrl}#${heading.slug}`
+      }));
+  })
+);
+const randomQuestionPool = randomQuestionGroups.flat();
+const initialRandomQuestions = randomQuestionPool.slice(0, 30);
+---
+
+<BaseLayout title="随机面试题" description="从全部面试题中随机抽取 30 道题。">
+  <header class="mb-xl text-center max-w-3xl mx-auto pt-lg">
+    <p class="text-xs font-semibold tracking-widest uppercase text-blue-600 mb-3">Random Practice</p>
+    <h1 class="text-headline-xl font-semibold tracking-tight text-zinc-900">随机题目</h1>
+    <p class="text-body-lg text-on-surface-variant max-w-2xl mx-auto mt-3 leading-relaxed">
+      从全部面试题中随机抽取 30 道，适合快速自测和查漏补缺。
+    </p>
+    <div class="flex flex-wrap justify-center gap-3 mt-8">
+      <a
+        href={withBase('/interview/')}
+        class="inline-flex items-center px-5 py-2.5 border border-gray-200 hover:bg-gray-50 rounded-full text-sm font-medium transition-colors text-zinc-500"
+      >
+        返回专题列表
+      </a>
+    </div>
+  </header>
+
+  <InterviewTopicStrip topics={topics} randomActive />
+
+  <section
+    data-random-questions
+    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+    aria-live="polite"
+  >
+    {
+      initialRandomQuestions.map((question, index) => (
+        <a
+          href={question.href}
+          class="group bg-white rounded-xl border border-gray-200 p-5 sm:p-6 flex min-h-[8.25rem] items-start gap-4 transition-all duration-300 hover:border-blue-500/30 hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)]"
+        >
+          <span class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-medium text-sm shrink-0">
+            {String(index + 1).padStart(2, '0')}
+          </span>
+          <div class="min-w-0">
+            <p class="mb-2 text-xs font-semibold text-blue-600">{question.topic}</p>
+            <h2 class="text-base font-semibold text-zinc-900 group-hover:text-blue-600 transition-colors leading-snug">
+              {question.title}
+            </h2>
+          </div>
+        </a>
+      ))
+    }
+  </section>
+
+  <script define:vars={{ randomQuestionPool }}>
+    const list = document.querySelector('[data-random-questions]');
+    const refreshButtons = document.querySelectorAll('[data-random-refresh], [data-random-topic-link="active"]');
+    const questionPool = randomQuestionPool;
+    const sampleSize = Math.min(30, questionPool.length);
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function shuffleQuestions() {
+      const items = [...questionPool];
+      for (let i = items.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [items[i], items[j]] = [items[j], items[i]];
+      }
+      return items.slice(0, sampleSize);
+    }
+
+    function renderQuestions() {
+      if (!list) return;
+
+      const questions = shuffleQuestions();
+      list.innerHTML = questions
+        .map((question, index) => `
+          <a
+            href="${escapeHtml(question.href)}"
+            class="group bg-white rounded-xl border border-gray-200 p-5 sm:p-6 flex min-h-[8.25rem] items-start gap-4 transition-all duration-300 hover:border-blue-500/30 hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)]"
+          >
+            <span class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-medium text-sm shrink-0">
+              ${String(index + 1).padStart(2, '0')}
+            </span>
+            <div class="min-w-0">
+              <p class="mb-2 text-xs font-semibold text-blue-600">${escapeHtml(question.topic)}</p>
+              <h2 class="text-base font-semibold text-zinc-900 group-hover:text-blue-600 transition-colors leading-snug">
+                ${escapeHtml(question.title)}
+              </h2>
+            </div>
+          </a>
+        `)
+        .join('');
+    }
+
+    renderQuestions();
+    refreshButtons.forEach((button) => {
+      button.addEventListener('click', (event) => {
+        if (button instanceof HTMLAnchorElement) {
+          event.preventDefault();
+        }
+        renderQuestions();
+      });
+    });
+  </script>
+</BaseLayout>

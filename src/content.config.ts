@@ -3,7 +3,7 @@ import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 
 const interview = defineCollection({
-  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/interview' }),
+  loader: glob({ pattern: '*.{md,mdx}', base: './src/content/interview' }),
   schema: z.object({
     title: z.string().optional(),
     description: z.string().optional(),
@@ -11,6 +11,20 @@ const interview = defineCollection({
     updatedDate: z.coerce.date().optional(),
     order: z.number().optional(),
     draft: z.boolean().default(false)
+  })
+});
+
+const interviewLogs = defineCollection({
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/interview/log' }),
+  schema: z.object({
+    date: z.coerce.date().optional(),
+    items: z.array(z.object({
+      no: z.number(),
+      title: z.string(),
+      category: z.string(),
+      updatedDate: z.coerce.date().optional(),
+      href: z.string().optional()
+    })).default([])
   })
 });
 
@@ -44,4 +58,4 @@ const posts = defineCollection({
   })
 });
 
-export const collections = { interview, notes, posts };
+export const collections = { interview, interviewLogs, notes, posts };

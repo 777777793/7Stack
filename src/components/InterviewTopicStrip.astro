@@ -1,0 +1,48 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { getTopicTitle, getTopicUrl, withBase } from '../lib/content';
+
+interface Props {
+  topics: CollectionEntry<'interview'>[];
+  activeTopicId?: string;
+  randomActive?: boolean;
+}
+
+const { topics, activeTopicId, randomActive = false } = Astro.props;
+const randomHref = withBase('/interview/random/');
+---
+
+<div class="flex flex-wrap justify-center gap-2 mb-xl" aria-label="专题切换">
+  <a
+    href={randomHref}
+    data-random-topic-link={randomActive ? 'active' : undefined}
+    class={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold transition-colors ${
+      randomActive
+        ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20'
+        : 'bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700'
+    }`}
+  >
+    {
+      randomActive && (
+        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16.02 9.35h4.38V4.97M20.16 9.08a8 8 0 0 0-13.54-3.3M7.98 14.65H3.6v4.38M3.84 14.92a8 8 0 0 0 13.54 3.3" />
+        </svg>
+      )
+    }
+    随机题目
+  </a>
+  {
+    topics.map((item) => (
+      <a
+        href={getTopicUrl(item)}
+        class={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+          item.id === activeTopicId
+            ? 'bg-white border border-gray-200 shadow-sm text-zinc-900'
+            : 'text-zinc-500 hover:text-zinc-900 hover:bg-gray-100'
+        }`}
+      >
+        {getTopicTitle(item)}
+      </a>
+    ))
+  }
+</div>

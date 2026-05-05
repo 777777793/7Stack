@@ -41,6 +41,27 @@ const topicCards = await Promise.all(
     <p class="text-body-lg text-on-surface-variant max-w-2xl mx-auto mt-2 leading-relaxed">
       高频面试题、追问链路和工程场景总结，按技术专题分类整理。
     </p>
+    <div class="mt-8 flex flex-wrap justify-center gap-3">
+      <a
+        href={withBase('/interview/random/')}
+        class="inline-flex items-center gap-2 rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-blue-500/20 transition-colors hover:bg-blue-700 active:scale-[0.98]"
+      >
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16.02 9.35h4.38V4.97M20.16 9.08a8 8 0 0 0-13.54-3.3M7.98 14.65H3.6v4.38M3.84 14.92a8 8 0 0 0 13.54 3.3" />
+        </svg>
+        随机题目
+      </a>
+      <a
+        href={withBase('/interview/changelog/')}
+        class="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-zinc-600 transition-colors hover:bg-gray-50 hover:text-zinc-900 active:scale-[0.98]"
+      >
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M7 4h10a2 2 0 0 1 2 2v14l-3-2-3 2-3-2-3 2V6a2 2 0 0 1 2-2Z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10 8h4M10 12h4" />
+        </svg>
+        更新日志
+      </a>
+    </div>
   </header>
 
   <section aria-label="面试题专题">
