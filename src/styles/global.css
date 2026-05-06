@@ -192,6 +192,22 @@ body {
   margin: 1rem 0;
 }
 
+.post-content ul {
+  list-style: disc;
+}
+
+.post-content ol {
+  list-style: decimal;
+}
+
+.post-content ul ul {
+  list-style: circle;
+}
+
+.post-content ul ul ul {
+  list-style: square;
+}
+
 .post-content table {
   display: block;
   width: 100%;
